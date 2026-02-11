@@ -1,0 +1,1434 @@
+{
+  "name": "WhatsApp Store",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Received",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -592,
+        -608
+      ],
+      "id": "135a5d38-9035-4519-b1ab-a839db657fb5",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -816,
+        -512
+      ],
+      "id": "f4ccea0a-be95-465c-b912-734629e7cb5e",
+      "name": "Normalize Payload",
+      "webhookId": "2571e437-0378-4a91-9071-2254b15e0a45"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the body from the webhook\nconst body = items[0].json.body;\n\n// 2. Safety Check: Is this actually a message? \n// (Meta sometimes sends status updates like \"sent\" or \"delivered\" which we want to ignore)\nif (\n  body.entry && \n  body.entry[0].changes && \n  body.entry[0].changes[0].value.messages\n) {\n  const message = body.entry[0].changes[0].value.messages[0];\n  const contact = body.entry[0].changes[0].value.contacts[0];\n  \n  // 3. Extract core data\n  let type = message.type;\n  let text_body = \"\";\n  let interaction_id = null;\n  let interaction_title = null;\n\n  // 4. Handle Standard Text\n  if (type === 'text') {\n    text_body = message.text.body;\n  }\n\n  // 5. Handle Interactive (Buttons & Lists)\n  if (type === 'interactive') {\n    const interactive = message.interactive;\n    \n    if (interactive.type === 'list_reply') {\n      interaction_id = interactive.list_reply.id;\n      interaction_title = interactive.list_reply.title;\n      text_body = interactive.list_reply.title; // Treat title as text for easier processing\n    } else if (interactive.type === 'button_reply') {\n      interaction_id = interactive.button_reply.id;\n      interaction_title = interactive.button_reply.title;\n      text_body = interactive.button_reply.title;\n    }\n  }\n\n  // 6. Return Clean Object\n  return {\n    json: {\n      wa_id: contact.wa_id,        // Phone Number\n      name: contact.profile.name,  // User Name\n      type: type,                  // 'text' or 'interactive'\n      text_body: text_body,        // The content\n      interaction_id: interaction_id // ID of button clicked (if any)\n    }\n  };\n}\n\n// If it's just a status update (read/delivered), return empty so we can filter it out\nreturn { json: { ignore: true } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -416
+      ],
+      "id": "ddf561a2-eb18-4c99-8a26-d5e998397bb7",
+      "name": "Normalizer"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 948950985,
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=948950985"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "wa_id": "={{ $('Normalizer').first().json.wa_id }}",
+            "name": "={{ $('Normalizer').first().json.name }}",
+            "step": "=done",
+            "address": "={{ $('Normalizer').first().json.text_body }}"
+          },
+          "matchingColumns": [
+            "wa_id"
+          ],
+          "schema": [
+            {
+              "id": "wa_id",
+              "displayName": "wa_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        304,
+        -608
+      ],
+      "id": "78bf2033-cd2c-4653-8077-ac91bde9d9de",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "using  this just for verifying the step like changing it from waiting to done status for the address",
+        "height": 240,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -224,
+        -496
+      ],
+      "typeVersion": 1,
+      "id": "a6796ee1-907c-4a4a-8920-7ee9df90513c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": " ## This is the webhook that we have to add in the meta dev webhook config also this is helping for receiving the what chats",
+        "height": 496,
+        "width": 624,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -864,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "e4fbb611-dc65-4fd6-87e0-6a2fd990f832",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalizer').first().json.interaction_id }}",
+                    "rightValue": "=action_checkout",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4cd825d9-1899-4441-8227-8ba5b30d6e8b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Checkout Button"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "53611e31-879d-442e-9176-c2c9775c0e8a",
+                    "leftValue": "={{ $('Normalizer').first().json.text_body }}",
+                    "rightValue": "=/menu|buy|shop|start|list/i",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Menu Request"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6ac40b61-50f3-4275-8c44-a4b8b097892a",
+                    "leftValue": "={{ $('Normalizer').first().json.type }}",
+                    "rightValue": "interactive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Add to Cart"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        304,
+        -256
+      ],
+      "id": "70c70295-bd7b-4e89-9ba4-bf101313d2ec",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "60dce174-d705-4c48-a63e-25bb9a1ebd8a",
+              "leftValue": "={{ $json.step }}",
+              "rightValue": "=waiting_for_address",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "81950e67-2514-49b6-84de-6699fb7f6007",
+              "leftValue": "={{ $('Normalizer').first().json.type }}",
+              "rightValue": "=text",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        -416
+      ],
+      "id": "898dc2ff-c0e2-48e1-9dc7-e175c1f09ebc",
+      "name": "State Machine check"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Product",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        880,
+        -224
+      ],
+      "id": "1d65b99f-a5be-4669-be03-087ec915430b",
+      "name": "Menu Request",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the products from the previous node\nconst products = items.map(item => item.json);\n\n// 2. Format them for WhatsApp\n// WhatsApp List Row limit: 24 chars for ID, 24 chars for Title\nconst productRows = products.map(p => ({\n  id: p.id.toString().substring(0, 24), \n  title: p.title.substring(0, 24),\n  description: `₹${p.price} - ${p.description || ''}`.substring(0, 72)\n}));\n\n// 3. Define the Checkout Button (Always the first item)\nconst checkoutRow = {\n  id: \"action_checkout\",\n  title: \"🛒 Checkout / View Cart\",\n  description: \"Click to finish your order\"\n};\n\n// 4. Construct the Section\nconst sections = [\n  {\n    title: \"Actions\",\n    rows: [checkoutRow]\n  },\n  {\n    title: \"Our Catalog\",\n    rows: productRows\n  }\n];\n\n// 5. Return the payload ready for the HTTP Request\nreturn {\n  json: {\n    messaging_product: \"whatsapp\",\n    recipient_type: \"individual\",\n    to: $('Normalizer').first().json.wa_id, // Get phone from the very first node\n    type: \"interactive\",\n    interactive: {\n      type: \"list\",\n      header: {\n        type: \"text\",\n        text: \"🛍️ Roorkee Shop\"\n      },\n      body: {\n        text: \"Browse our collection below. Click a product to add it to your cart.\"\n      },\n      footer: {\n        text: \"Powered by n8n\"\n      },\n      action: {\n        button: \"View Menu\",\n        sections: sections\n      }\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        -224
+      ],
+      "id": "ec8ebd45-82e3-4288-84a4-c3d8a063fc9a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/901293816392942/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        -224
+      ],
+      "id": "a710c96f-a2ef-4951-a8d3-35008fe354b6",
+      "name": "Send the Menu",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oNCwqmUgTlxciKdn",
+          "name": "WhatsApp account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 791907279,
+          "mode": "list",
+          "cachedResultName": "Cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=791907279"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "wa_id": "={{ $('Normalizer').first().json.wa_id }}",
+            "product_id": "={{ $('Normalizer').first().json.interaction_id }}",
+            "quantity": "1",
+            "timestamp": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "wa_id",
+              "displayName": "wa_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_id",
+              "displayName": "product_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "quantity",
+              "displayName": "quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        -160
+      ],
+      "id": "19f915f5-69f7-4bb2-bd3b-d85f3ca8762f",
+      "name": "Save to Cart",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 948950985,
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=948950985"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "wa_id",
+              "lookupValue": "={{ $('Normalizer').first().json.wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        592,
+        -560
+      ],
+      "id": "f571b7fc-ad41-4717-a3fe-336b9d5f91e1",
+      "name": "The Gatekeeper",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1c64678-da69-4a0d-a724-da956fdd12b0",
+              "leftValue": "=address",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        -560
+      ],
+      "id": "4b0df36a-2dd2-4b25-80fa-e5e769ee5ed1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 791907279,
+          "mode": "list",
+          "cachedResultName": "Cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=791907279"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "wa_id",
+              "lookupValue": "={{ $('Normalizer').first().json.wa_id }}"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        -656
+      ],
+      "id": "b8743838-44b1-42ca-87ea-649b622390e2",
+      "name": "Get Cart",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Product",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        -656
+      ],
+      "id": "ca2b9226-0786-44d3-a4ad-e79f2568108c",
+      "name": "Get Products",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cartItems = $('Get Cart').all().map(i => i.json);\nconst products = $('Get Products').all().map(i => i.json);\n\nlet total = 0;\nlet summaryText = \"\";\n\n// 1. Calculate Total & Build Summary\ncartItems.forEach(cartItem => {\n  const product = products.find(p => p.id.toString() == cartItem.product_id.toString());\n  if (product) {\n    const itemTotal = product.price * cartItem.quantity;\n    total += itemTotal;\n    summaryText += `• ${product.title} (x${cartItem.quantity})\\n`;\n  }\n});\n\n// 2. Generate Order ID (Random 6 digits)\nconst orderId = \"ORD-\" + Math.floor(100000 + Math.random() * 900000);\n\n// 3. Create One-Line Summary for Google Sheets\nconst dbItems = cartItems.map(c => {\n    const p = products.find(prod => prod.id.toString() == c.product_id.toString());\n    return p ? `${p.title}(x${c.quantity})` : `ID:${c.product_id}`;\n}).join(\", \");\n\n// 4. Return Data\nreturn {\n  json: {\n    order_id: orderId,\n    db_items: dbItems,\n    summary: summaryText,\n    total_amount: total,\n    currency: \"INR\",\n    wa_id: $('Normalizer').first().json.wa_id,\n    user_name: $('Normalizer').first().json.name,\n    user_address: $('The Gatekeeper').first().json.address\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        -656
+      ],
+      "id": "11865166-003f-49bd-a17e-7bb7b764de3f",
+      "name": "Calculate Total"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/901293816392942/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"messaging_product\": \"whatsapp\",\n  \"to\": $('Normalizer').first().json.wa_id,\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🎉 *Order Confirmed!*\\n\\nOrder ID: \" + $('Save Order').item.json.order_id+ \"\\n\\nItems:\\n\" + $('Calculate Total').item.json.summary + \"\\n----------------\\n*Total to Pay: ₹\" + $('Save Order').item.json.total_amount + \"*\\n\\n📍 Shipping to: \" + $('Calculate Total').item.json.user_address + \"\\n\\n✅ *Cash on Delivery (COD)* applied.\\nWe will ship your items soon!\"\n  }\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2224,
+        -656
+      ],
+      "id": "86187143-2939-4cd7-8799-f5014089acf2",
+      "name": "Send Bill",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oNCwqmUgTlxciKdn",
+          "name": "WhatsApp account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 948950985,
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=948950985"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "wa_id",
+              "lookupValue": "={{ $json.wa_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -144,
+        -416
+      ],
+      "id": "dcf0609f-5ecc-4251-96d5-710e26f49d95",
+      "name": "Get User State",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 948950985,
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=948950985"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "step": "waiting_for_address",
+            "wa_id": "={{ $('Normalizer').first().json.wa_id }}"
+          },
+          "matchingColumns": [
+            "wa_id"
+          ],
+          "schema": [
+            {
+              "id": "wa_id",
+              "displayName": "wa_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "step",
+              "displayName": "step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        -464
+      ],
+      "id": "7dd0a232-04f6-4e87-9612-36be5f6db9ef",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/901293816392942/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $('Normalizer').first().json.wa_id }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"📍 *Delivery Address Missing*\\n\\nPlease type your full delivery address below (e.g., 'Flat 101, MG Road, Bangalore') so we can calculate shipping.\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1328,
+        -464
+      ],
+      "id": "8c193c7b-2a62-4084-a501-e9bec5549f8b",
+      "name": "Asking for the Address",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oNCwqmUgTlxciKdn",
+          "name": "WhatsApp account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Normalizer').first().json.text_body }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the friendly sales assistant for Roorkee Shop, an online food store. Keep answers short (under 50 words) and formatted for WhatsApp. If a user asks to buy something, tell them to type 'Menu' to see our catalog."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        528,
+        144
+      ],
+      "id": "b938f16b-40a6-4b07-9032-14af22ed8ea2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-robotics-er-1.5-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        608,
+        368
+      ],
+      "id": "6f726637-32b5-401a-b619-03d53b49ff85",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IiXfZ4CdhpY7JogF",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v18.0/901293816392942/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $('Normalizer').first().json.wa_id }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"{{ $json.text }}\" \n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        880,
+        144
+      ],
+      "id": "05d0ab1a-feb3-487e-b37e-61e150c5132f",
+      "name": "Send the AI Response",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oNCwqmUgTlxciKdn",
+          "name": "WhatsApp account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "855df3b9-20ef-4fe1-bcfa-30e33237c67b",
+              "leftValue": "={{ $json.wa_id }}",
+              "rightValue": "Is Not Empty",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -368,
+        -416
+      ],
+      "id": "32394d84-70fc-44aa-ae11-62149321f237",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1555521582,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=1555521582"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $json.order_id }}",
+            "wa_id": "={{ $json.wa_id }}",
+            "items": "={{ $json.items_summary }}",
+            "total_amount": "={{ $json.total_amount }}",
+            "status": "CONFIRMED"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "wa_id",
+              "displayName": "wa_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "items",
+              "displayName": "items",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_amount",
+              "displayName": "total_amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "payment_link_id",
+              "displayName": "payment_link_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1776,
+        -656
+      ],
+      "id": "eac8ee54-2e12-4e2b-989d-5a6316759843",
+      "name": "Save Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM",
+          "mode": "list",
+          "cachedResultName": "WhatsApp Store",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 791907279,
+          "mode": "list",
+          "cachedResultName": "Cart",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1stK69WcKYnfiPS2grvudQA2fYshhEJzNPnfv1wB3MpM/edit#gid=791907279"
+        },
+        "startIndex": 3,
+        "numberToDelete": 2
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2000,
+        -656
+      ],
+      "id": "7dc1d63a-3308-4467-8ea2-e80971678995",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7Gv5EmKnQt3X2H1T",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "                       HELPER CHATBOT FOR FALLBACKS AND HELPING USER ",
+        "height": 432,
+        "width": 800,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "adafaba6-93b9-46e2-ad36-1218f116d153",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "                                        THE MAIN NODE BEHIND SEND THE MENU",
+        "height": 320,
+        "width": 1024,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        496,
+        -320
+      ],
+      "typeVersion": 1,
+      "id": "a696929d-a55f-4097-8d87-a84d4d2e24ed",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## These are the helper node which sends the user  message to different node for their respective purposes",
+        "height": 720,
+        "width": 656,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -208,
+        -752
+      ],
+      "typeVersion": 1,
+      "id": "c6c4b7fa-5947-464c-b553-f8fbff18c663",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "                                    HERE  IS THE GATEKEEPER FOR THE WORKFLOW IT CHECK THE CARTS AND ORDER STATUS AND SEND THE BILL",
+        "height": 320,
+        "width": 1968,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        -720
+      ],
+      "typeVersion": 1,
+      "id": "32ddfd97-2342-4beb-a21b-e09475be67f1",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "           HELPER FOR ASKING FOR THE ADDRESS",
+        "height": 208,
+        "width": 512,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        -512
+      ],
+      "typeVersion": 1,
+      "id": "6a7656bd-e49e-462f-9697-73b70e741dcd",
+      "name": "Sticky Note7"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizer": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "State Machine check": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "The Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Menu Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save to Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Menu Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send the Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Cart": {
+      "main": [
+        [
+          {
+            "node": "Menu Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "The Gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "The Gatekeeper": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get Cart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cart": {
+      "main": [
+        [
+          {
+            "node": "Get Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Products": {
+      "main": [
+        [
+          {
+            "node": "Calculate Total",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Total": {
+      "main": [
+        [
+          {
+            "node": "Save Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User State": {
+      "main": [
+        [
+          {
+            "node": "State Machine check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Asking for the Address",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send the AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get User State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Order": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Bill",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cc99f4d2-5079-4aaa-8aa6-de7ca8f05eea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9779d49c2f51af1a0de31784afc53bb74422e5c8f043b82f969dea9eab819175"
+  },
+  "id": "H7IpHTdvPoeXBy49",
+  "tags": []
+}
