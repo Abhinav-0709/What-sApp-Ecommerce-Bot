@@ -1,5 +1,5 @@
 # 🛒 WhatsApp E-Commerce SaaS (Libromi Clone)
-<img width="1635" height="673" alt="image" src="https://github.com/user-attachments/assets/9331892d-f62c-4e43-9b26-547f2c4fd9ed" />
+<img width="1635" height="673" alt="image" src="https://github.com/user-attachments/assets/d4daa948-3a6c-4732-a7aa-f2631dbdbff7" />
 
 > A fully automated WhatsApp store built with **n8n**, **Google Sheets**, and **Gemini AI**.
 
@@ -50,24 +50,28 @@ The system follows a **"Fresh v2"** architecture where n8n acts as the central b
 Create a Google Sheet with the following **4 Tabs**. The column names must match exactly.
 
 ### 1. `Products`
+
 | id | title | price | description |
 | :--- | :--- | :--- | :--- |
 | 101 | Atomic Habits | 500 | Build good habits |
 | 102 | The Alchemist | 300 | A fable about following your dream |
 
 ### 2. `Users`
+
 | wa_id | name | step | address |
 | :--- | :--- | :--- | :--- |
 | 919876543210 | John Doe | idle | 123 Main St, NY |
 
 ### 3. `Carts`
+
 | wa_id | product_id | quantity | timestamp |
 | :--- | :--- | :--- | :--- |
 | 919876543210 | 101 | 1 | 2023-10-25... |
 
 ### 4. `Orders`
+
 | order_id | wa_id | items | total_amount | status | address |
-| :--- | :--- | :--- | :--- |
+| :--- | :--- | :--- | :--- | :--- | :--- |
 | ORD-48291 | 919876543210 | Atomic Habits(x1) | 500 | CONFIRMED | 123 Main St |
 
 ---
